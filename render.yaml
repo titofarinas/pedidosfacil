@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: pedidos
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server/server.js
+    healthCheckPath: /api/negocio
+    autoDeploy: true
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: PANEL_PASSWORD
+        sync: false
+      - key: SUPABASE_TABLE
+        value: pedidos

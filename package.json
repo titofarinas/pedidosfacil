@@ -1,0 +1,15 @@
+{
+  "name": "pedidos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Catálogo de productos con pedidos por WhatsApp y panel de pedidos.",
+  "scripts": {
+    "start": "node server/server.js",
+    "start:env": "node --env-file=.env server/server.js",
+    "dev": "node --watch server/server.js",
+    "dev:env": "node --env-file=.env --watch server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

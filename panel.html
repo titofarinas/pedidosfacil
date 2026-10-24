@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#241c16">
+  <title>Panel de pedidos</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="assets/css/panel.css">
+</head>
+<body>
+  <div class="login-screen" id="loginScreen">
+    <form class="login-card" id="loginForm" novalidate>
+      <span class="login-mark" id="loginMark">SN</span>
+      <h1>Panel de pedidos</h1>
+      <p class="muted login-sub" id="loginBiz">Ingresá con la clave del negocio.</p>
+      <label class="field">
+        <span>Clave</span>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Tu clave">
+      </label>
+      <p class="login-hint" id="loginHint" hidden></p>
+      <p class="login-error" id="loginError" hidden></p>
+      <button class="btn-primary" id="loginBtn" type="submit">Ingresar</button>
+      <a class="login-link" href="index.html">Volver al catálogo</a>
+    </form>
+  </div>
+
+  <div class="app" id="app" hidden>
+    <header class="app-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="index.html">
+          <span class="brand-mark" id="panelMark">SN</span>
+          <span class="brand-text">
+            <strong id="panelBizName">Mi negocio</strong>
+            <small>Panel de pedidos</small>
+          </span>
+        </a>
+        <div class="header-actions">
+          <span class="header-date" id="headerDate"></span>
+          <span class="updated" id="updatedAt">Sin actualizar</span>
+          <button class="icon-btn" id="refreshBtn" type="button" aria-label="Actualizar pedidos" title="Actualizar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
+          <button class="ghost-btn" id="logoutBtn" type="button">Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap panel">
+      <section class="stats" aria-label="Resumen de hoy">
+        <div class="stat">
+          <span class="stat-label">Pedidos hoy</span>
+          <strong class="stat-value" id="statPedidos">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Nuevos</span>
+          <strong class="stat-value accent-orange" id="statNuevos">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">En preparación</span>
+          <strong class="stat-value accent-amber" id="statPreparando">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Listos</span>
+          <strong class="stat-value accent-blue" id="statListos">0</strong>
+        </div>
+        <div class="stat stat-accent">
+          <span class="stat-label">Ventas hoy</span>
+          <strong class="stat-value" id="statVentas">C$0</strong>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar pedidos"></div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar por código, cliente o producto..." autocomplete="off">
+          <span class="sr-only">Buscar pedido</span>
+        </label>
+      </section>
+
+      <div class="orders" id="orders"></div>
+      <div class="empty-state" id="ordersEmpty" hidden>
+        <h2>No hay pedidos con estos filtros</h2>
+        <p>Cuando llegue un pedido nuevo va a aparecer acá automáticamente.</p>
+      </div>
+
+      <p class="panel-foot">Actualización automática cada 12 segundos · <a href="index.html">Ver catálogo</a></p>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/js/panel.js" defer></script>
+</body>
+</html>
