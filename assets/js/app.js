@@ -215,7 +215,7 @@
   function productCard(product) {
     var out = product.disponible === false;
     var image = product.imagen
-      ? '<img src="' + esc(product.imagen) + '" alt="' + esc(product.nombre) + '" loading="lazy">'
+      ? '<img src="' + esc(product.imagen) + '" alt="' + esc(product.nombre) + '" loading="lazy" onerror="this.style.display=\'none\'">'
       : '<span class="art-initials">' + esc(initials(product.nombre)) + "</span>";
     var tag = product.etiqueta && !out
       ? '<span class="product-tag">' + esc(product.etiqueta) + "</span>"
@@ -267,10 +267,13 @@
       el.checkout.hidden = false;
       el.cartItems.innerHTML = items.map(function (item) {
         var product = productById(item.id);
+        var art = product && product.imagen
+          ? '<img src="' + esc(product.imagen) + '" alt="' + esc(product.nombre) + '" onerror="this.style.display=\'none\'">'
+          : esc(initials(product ? product.nombre : item.id));
         return (
           '<div class="cart-item">' +
-            '<span class="ci-art" style="' + tintStyle(product.categoria) + '">' +
-              esc(initials(product.nombre)) +
+            '<span class="ci-art" style="' + tintStyle(product ? product.categoria : "") + '">' +
+              art +
             "</span>" +
             '<div class="ci-main">' +
               '<div class="ci-top">' +

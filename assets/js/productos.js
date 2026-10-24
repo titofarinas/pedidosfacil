@@ -62,7 +62,8 @@ window.PRODUCTOS = [
     descripcion: "Plátano verde frito con queso frito y crema.",
     precio: 60,
     categoria: "fritos",
-    disponible: true
+    disponible: true,
+	imagen: "assets/img/tajadasconqueso.jpeg"
   },
   {
     id: "baho",
