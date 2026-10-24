@@ -99,6 +99,52 @@
     return !isNaN(date.getTime()) && date.toDateString() === new Date().toDateString();
   }
 
+  function phoneDigits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function formatPhone(digits) {
+    if (digits.length === 11 && digits.indexOf("505") === 0) {
+      return "+505 " + digits.slice(3, 7) + " " + digits.slice(7);
+    }
+    return "+" + digits;
+  }
+
+  function firstName(name) {
+    return String(name || "").trim().split(/\s+/)[0] || "";
+  }
+
+  function statusMessage(pedido, estado) {
+    var nombre = firstName(pedido.cliente && pedido.cliente.nombre);
+    var saludo = nombre ? "Hola " + nombre + ", " : "Hola, ";
+    var negocio = state.negocio.nombre || "el negocio";
+    var mensaje;
+
+    if (estado === "preparando") {
+      mensaje = "tu pedido " + pedido.codigo + " ya está en preparación. Te avisamos cuando esté listo.";
+    } else if (estado === "listo") {
+      mensaje = pedido.tipo === "delivery"
+        ? "tu pedido " + pedido.codigo + " ya está listo y salimos a entregarlo."
+        : "tu pedido " + pedido.codigo + " ya está listo para retirar en el local.";
+    } else if (estado === "entregado") {
+      mensaje = "tu pedido " + pedido.codigo + " fue entregado. ¡Gracias por tu compra!";
+    } else if (estado === "cancelado") {
+      mensaje = "tu pedido " + pedido.codigo + " fue cancelado. Si tenés alguna duda, escribinos.";
+    } else if (estado === "nuevo") {
+      mensaje = "reactivamos tu pedido " + pedido.codigo + ". Seguimos coordinando por acá.";
+    } else {
+      mensaje = "tu pedido " + pedido.codigo + " cambió a " + (ESTADOS[estado] || estado) + ".";
+    }
+
+    return saludo + mensaje + "\n\n" + negocio;
+  }
+
+  function notifyHref(pedido, estado) {
+    var phone = phoneDigits(pedido.cliente && pedido.cliente.telefono);
+    if (!phone) return "";
+    return "https://wa.me/" + phone + "?text=" + encodeURIComponent(statusMessage(pedido, estado));
+  }
+
   function api(pathname, options) {
     options = options || {};
     var headers = options.headers || {};
@@ -132,14 +178,23 @@
     );
   }
 
-  function showToast(message, isError) {
+  function showToast(message, isError, action) {
     el.toast.textContent = message;
+    var hasAction = Boolean(action && action.href);
+    if (hasAction) {
+      var link = node("a", "toast-action", action.label || "Avisar");
+      link.href = action.href;
+      link.target = "_blank";
+      link.rel = "noopener";
+      el.toast.appendChild(link);
+    }
     el.toast.classList.toggle("is-error", Boolean(isError));
+    el.toast.classList.toggle("has-action", hasAction);
     el.toast.classList.add("is-visible");
     window.clearTimeout(state.toastTimer);
     state.toastTimer = window.setTimeout(function () {
       el.toast.classList.remove("is-visible");
-    }, 3200);
+    }, hasAction ? 8000 : 3200);
   }
 
   function showLoginError(message) {
@@ -329,6 +384,15 @@
     customer.appendChild(pills);
     card.appendChild(customer);
 
+    var phone = phoneDigits(pedido.cliente && pedido.cliente.telefono);
+    if (phone) {
+      var phoneLink = node("a", "order-phone", "Avisar por WhatsApp: " + formatPhone(phone));
+      phoneLink.href = notifyHref(pedido, pedido.estado);
+      phoneLink.target = "_blank";
+      phoneLink.rel = "noopener";
+      card.appendChild(phoneLink);
+    }
+
     if (pedido.tipo === "delivery" && pedido.cliente && pedido.cliente.direccion) {
       card.appendChild(node("p", "order-address", pedido.cliente.direccion));
     }
@@ -371,6 +435,16 @@
       actions.appendChild(button);
     });
 
+    var notify = notifyHref(pedido, pedido.estado);
+    if (notify) {
+      var notifyLink = node("a", "order-action is-notify", "Avisar");
+      notifyLink.href = notify;
+      notifyLink.target = "_blank";
+      notifyLink.rel = "noopener";
+      notifyLink.title = "Enviar aviso por WhatsApp";
+      actions.appendChild(notifyLink);
+    }
+
     if (!transitions.length) {
       actions.appendChild(node("span", "order-done",
         pedido.estado === "cancelado" ? "Pedido cancelado" : "Pedido entregado"));
@@ -412,7 +486,9 @@
           return item.id === updated.id ? updated : item;
         });
         render();
-        showToast("Pedido " + updated.codigo + " → " + (ESTADOS[estado] || estado));
+        var aviso = notifyHref(updated, estado);
+        showToast("Pedido " + updated.codigo + " → " + (ESTADOS[estado] || estado), false,
+          aviso ? { href: aviso, label: "Avisar" } : null);
       })
       .catch(function (error) {
         if (error.status !== 401) {

@@ -8,6 +8,7 @@ function mapRow(row) {
     tipo: row.tipo,
     cliente: {
       nombre: row.cliente_nombre,
+      telefono: row.cliente_telefono || "",
       direccion: row.cliente_direccion || "",
       pago: row.cliente_pago || "",
       notas: row.cliente_notas || ""
@@ -25,6 +26,7 @@ function mapOrder(order) {
     estado: order.estado,
     tipo: order.tipo,
     cliente_nombre: order.cliente.nombre,
+    cliente_telefono: order.cliente.telefono || null,
     cliente_direccion: order.cliente.direccion || null,
     cliente_pago: order.cliente.pago || null,
     cliente_notas: order.cliente.notas || null,

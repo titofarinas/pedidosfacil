@@ -3,6 +3,7 @@ window.NEGOCIO = {
   eslogan: "Comida casera con sabor de casa",
   descripcion: "Almuerzos, fritos y bebidas naturales preparados al momento. Armá tu pedido y coordinamos por WhatsApp.",
   whatsapp: "50587640684",
+  codigoPais: "505",
   moneda: "C$",
   direccion: "Barrio Los Robles, Managua",
   horario: "Lunes a sábado · 11:00 a.m. a 8:00 p.m.",

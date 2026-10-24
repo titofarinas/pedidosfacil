@@ -125,6 +125,13 @@
     return String(NEGOCIO.whatsapp || "").replace(/\D/g, "");
   }
 
+  function normalizePhone(value) {
+    var digits = String(value || "").replace(/\D/g, "");
+    var country = String(NEGOCIO.codigoPais || "").replace(/\D/g, "");
+    if (digits.length === 8 && country) digits = country + digits;
+    return digits;
+  }
+
   function whatsappUrl(message) {
     return "https://wa.me/" + whatsappDigits() + "?text=" + encodeURIComponent(message);
   }
@@ -464,6 +471,7 @@
     lines.push(NEGOCIO.nombre || "Mi negocio");
     lines.push("");
     lines.push("*Cliente:* " + data.nombre);
+    if (data.telefono) lines.push("*WhatsApp:* +" + data.telefono);
     lines.push("*Entrega:* " + (totals.type === "delivery" ? "Delivery" : "Retiro en local"));
     if (totals.type === "delivery") lines.push("*Dirección:* " + data.direccion);
     if (data.pago) lines.push("*Pago:* " + data.pago);
@@ -514,8 +522,10 @@
     }
 
     var nombreInput = $("#cNombre");
+    var telefonoInput = $("#cTelefono");
     var direccionInput = $("#cDireccion");
     var nombre = nombreInput.value.trim();
+    var telefono = normalizePhone(telefonoInput.value);
     var direccion = direccionInput.value.trim();
     var totals = computeTotals();
     var valid = true;
@@ -525,6 +535,13 @@
       valid = false;
     } else {
       setFieldError("cNombre", "errNombre", false);
+    }
+
+    if (telefono.length < 8 || telefono.length > 15) {
+      setFieldError("cTelefono", "errTelefono", true);
+      valid = false;
+    } else {
+      setFieldError("cTelefono", "errTelefono", false);
     }
 
     if (totals.type === "delivery" && direccion.length < 5) {
@@ -556,6 +573,7 @@
     var message = buildMessage({
       codigo: codigo,
       nombre: nombre,
+      telefono: telefono,
       direccion: direccion,
       pago: pago,
       notas: notas
@@ -564,6 +582,7 @@
     saveToPanel({
       codigo: codigo,
       nombre: nombre,
+      telefono: telefono,
       tipo: totals.type,
       direccion: direccion,
       pago: pago,
@@ -579,6 +598,7 @@
     saveCart();
     renderCart();
     closeCart();
+    $("#cTelefono").value = "";
     $("#cDireccion").value = "";
     $("#cNotas").value = "";
     showToast("Pedido listo. Enviá el mensaje en WhatsApp.");
@@ -653,6 +673,7 @@
 
     el.checkout.addEventListener("input", function (event) {
       if (event.target.id === "cNombre") clearFieldError("cNombre");
+      if (event.target.id === "cTelefono") clearFieldError("cTelefono");
       if (event.target.id === "cDireccion") clearFieldError("cDireccion");
     });
 

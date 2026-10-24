@@ -138,11 +138,23 @@ function isDuplicate(error) {
   return Boolean(error) && (error.code === "23505" || error.status === 409);
 }
 
+function normalizePhone(value) {
+  let digits = String(value || "").replace(/\D/g, "");
+  const country = String((business.negocio && business.negocio.codigoPais) || "").replace(/\D/g, "");
+  if (digits.length === 8 && country) digits = country + digits;
+  return digits;
+}
+
 function buildOrder(body) {
   if (!body || typeof body !== "object") return { error: "Datos inválidos." };
 
   const nombre = String(body.nombre || "").trim().replace(/\s+/g, " ").slice(0, 80);
   if (nombre.length < 2) return { error: "Ingresá el nombre del cliente." };
+
+  const telefono = normalizePhone(body.telefono);
+  if (telefono.length < 8 || telefono.length > 15) {
+    return { error: "Ingresá un número de WhatsApp válido." };
+  }
 
   const entrega = business.negocio.entrega || {};
   const tipo = entrega.activa === false || body.tipo === "pickup" ? "pickup" : "delivery";
@@ -194,7 +206,7 @@ function buildOrder(body) {
       actualizadoEn: now,
       estado: "nuevo",
       tipo,
-      cliente: { nombre, direccion, pago, notas },
+      cliente: { nombre, telefono, direccion, pago, notas },
       items,
       subtotal,
       envio,

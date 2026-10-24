@@ -6,6 +6,7 @@ create table if not exists public.pedidos (
   estado text not null default 'nuevo' check (estado in ('nuevo', 'preparando', 'listo', 'entregado', 'cancelado')),
   tipo text not null default 'delivery' check (tipo in ('delivery', 'pickup')),
   cliente_nombre text not null,
+  cliente_telefono text,
   cliente_direccion text,
   cliente_pago text,
   cliente_notas text,
@@ -17,5 +18,7 @@ create table if not exists public.pedidos (
 
 create index if not exists pedidos_creado_en_idx on public.pedidos (creado_en desc);
 create index if not exists pedidos_estado_idx on public.pedidos (estado);
+
+alter table public.pedidos add column if not exists cliente_telefono text;
 
 alter table public.pedidos enable row level security;
