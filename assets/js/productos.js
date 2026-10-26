@@ -1,7 +1,7 @@
 window.CATEGORIAS = [
   { id: "todos", nombre: "Todo" },
   { id: "almuerzos", nombre: "Almuerzos" },
-  { id: "fritos", nombre: "Fritos" },
+  { id: "fritanga", nombre: "fritanga" },
   { id: "bebidas", nombre: "Bebidas" },
   { id: "postres", nombre: "Postres" }
 ];
@@ -36,7 +36,7 @@ window.PRODUCTOS = [
     nombre: "Nacatamal",
     descripcion: "Maíz, cerdo, arroz, papa y chile envueltos en hoja de plátano.",
     precio: 85,
-    categoria: "fritos",
+    categoria: "fritanga",
     disponible: true,
     etiqueta: "Favorito"
   },
@@ -45,7 +45,7 @@ window.PRODUCTOS = [
     nombre: "Vigorón",
     descripcion: "Chicharrón, yuca, repollo fresco y curtido sobre hoja de plátano.",
     precio: 75,
-    categoria: "fritos",
+    categoria: "fritanga",
     disponible: true
   },
   {
@@ -53,7 +53,7 @@ window.PRODUCTOS = [
     nombre: "Quesillo",
     descripcion: "Tortilla de maíz con queso, cebolla y crema al gusto.",
     precio: 40,
-    categoria: "fritos",
+    categoria: "fritanga",
     disponible: true
   },
   {
@@ -61,7 +61,7 @@ window.PRODUCTOS = [
     nombre: "Tajadas con queso",
     descripcion: "Plátano verde frito con queso frito y crema.",
     precio: 60,
-    categoria: "fritos",
+    categoria: "fritanga",
     disponible: true,
 	imagen: "assets/img/tajadasconqueso.jpeg"
   },

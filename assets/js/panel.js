@@ -243,10 +243,14 @@
         el.panelMark.textContent = mark;
         el.panelBizName.textContent = state.negocio.nombre;
         el.loginBiz.textContent = "Ingresá con la clave de " + state.negocio.nombre + ".";
-        if (state.demo) {
+        if (data.trial && data.trialDaysLeft > 0) {
+          el.loginHint.textContent = "Demo: " + data.trialDaysLeft + " día" + (data.trialDaysLeft === 1 ? "" : "s") + " restante" + (data.trialDaysLeft === 1 ? "" : "s");
+          el.loginHint.hidden = false;
+        } else if (state.demo) {
           el.loginHint.textContent = "Clave de demostración: 1234";
           el.loginHint.hidden = false;
         }
+        if (state.negocio.colores) applyTheme();
       })
       .catch(function () {
         showLoginError("El panel necesita el servidor. Ejecutá npm start y abrí esta página desde esa dirección.");
@@ -556,6 +560,9 @@
       logout(false);
     });
     el.refreshBtn.addEventListener("click", refresh);
+    if (el.printBtn) {
+      el.printBtn.addEventListener("click", function () { window.print(); });
+    }
 
     el.search.addEventListener("input", function (event) {
       state.query = event.target.value;
@@ -571,6 +578,34 @@
 
     document.addEventListener("visibilitychange", function () {
       if (!document.hidden && state.token && !el.app.hidden) refresh();
+    });
+  }
+
+  function applyTheme() {
+    var colors = (state.negocio && state.negocio.colores) || {};
+    var root = document.documentElement;
+    var map = {
+      bg: "--bg",
+      surface: "--surface",
+      surface2: "--surface-2",
+      ink: "--ink",
+      muted: "--muted",
+      line: "--line",
+      brand: "--brand",
+      brandDark: "--brand-dark",
+      brandSoft: "--brand-soft",
+      green: "--green",
+      greenDark: "--green-dark",
+      greenSoft: "--green-soft",
+      amber: "--amber",
+      amberSoft: "--amber-soft",
+      blue: "--blue",
+      blueSoft: "--blue-soft",
+      shadow: "--shadow",
+      shadowLg: "--shadow-lg"
+    };
+    Object.keys(map).forEach(function (key) {
+      if (colors[key]) root.style.setProperty(map[key], colors[key]);
     });
   }
 
@@ -590,6 +625,7 @@
     el.headerDate = $("#headerDate");
     el.updatedAt = $("#updatedAt");
     el.refreshBtn = $("#refreshBtn");
+    el.printBtn = $("#printBtn");
     el.logoutBtn = $("#logoutBtn");
     el.statPedidos = $("#statPedidos");
     el.statNuevos = $("#statNuevos");

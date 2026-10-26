@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#241c16">
+  <meta name="theme-color" content="#e0491f">
   <title>Panel de pedidos</title>
   <meta name="robots" content="noindex">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <link rel="stylesheet" href="assets/css/panel.css">
 </head>
 <body>
@@ -38,6 +40,9 @@
         <div class="header-actions">
           <span class="header-date" id="headerDate"></span>
           <span class="updated" id="updatedAt">Sin actualizar</span>
+          <button class="icon-btn" id="printBtn" type="button" aria-label="Imprimir pedidos" title="Imprimir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          </button>
           <button class="icon-btn" id="refreshBtn" type="button" aria-label="Actualizar pedidos" title="Actualizar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
           </button>

@@ -13,6 +13,8 @@ const HOST = process.env.HOST || "0.0.0.0";
 const PASSWORD = process.env.PANEL_PASSWORD || "1234";
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const ESTADOS = ["nuevo", "preparando", "listo", "entregado", "cancelado"];
+const DEMO_DAYS = Number(process.env.DEMO_DAYS) || 7;
+const DEMO_START = process.env.DEMO_START || new Date().toISOString().slice(0, 10);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -33,16 +35,119 @@ const sessions = new Map();
 const attempts = new Map();
 let store = null;
 
+function demoStatus() {
+  const start = new Date(DEMO_START + "T00:00:00");
+  if (isNaN(start.getTime())) return { active: true, daysLeft: DEMO_DAYS };
+  const end = new Date(start);
+  end.setDate(end.getDate() + DEMO_DAYS);
+  const now = new Date();
+  const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+  return {
+    active: now < end,
+    daysLeft: diff > 0 ? diff : 0,
+    endsAt: end.toISOString().slice(0, 10)
+  };
+}
+
+function loadProductos() {
+  if (process.env.PRODUCTOS_JSON) {
+    try {
+      const parsed = JSON.parse(process.env.PRODUCTOS_JSON);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (error) {
+      console.error("PRODUCTOS_JSON inválido:", error.message);
+    }
+  }
+  const context = vm.createContext({ window: {} });
+  try {
+    const source = fs.readFileSync(path.join(ROOT, "assets/js/productos.js"), "utf8");
+    vm.runInContext(source, context, { filename: "assets/js/productos.js" });
+  } catch (error) {
+    // ignore
+  }
+  return Array.isArray(context.window.PRODUCTOS) ? context.window.PRODUCTOS : [];
+}
+
 function loadBusiness() {
+  const useEnv = Boolean(process.env.BUSINESS_NAME || process.env.BUSINESS_WHATSAPP);
+  if (useEnv) {
+    const pagos = process.env.BUSINESS_PAGOS
+      ? String(process.env.BUSINESS_PAGOS).split(",").map((item) => item.trim()).filter(Boolean)
+      : ["Efectivo", "Transferencia bancaria", "POS"];
+    let colores = {};
+    if (process.env.BUSINESS_COLORS) {
+      try {
+        colores = JSON.parse(process.env.BUSINESS_COLORS);
+      } catch (error) {
+        console.error("BUSINESS_COLORS inválido:", error.message);
+      }
+    }
+    let horarios = null;
+    if (process.env.BUSINESS_OPEN_HOURS) {
+      try {
+        horarios = JSON.parse(process.env.BUSINESS_OPEN_HOURS);
+      } catch (error) {
+        console.error("BUSINESS_OPEN_HOURS inválido:", error.message);
+      }
+    }
+    return {
+      negocio: {
+        nombre: process.env.BUSINESS_NAME || "Mi negocio",
+        eslogan: process.env.BUSINESS_ESLOGAN || "",
+        descripcion: process.env.BUSINESS_DESCRIPCION || "Armá tu pedido y coordinamos por WhatsApp.",
+        whatsapp: String(process.env.BUSINESS_WHATSAPP || "").replace(/\D/g, ""),
+        codigoPais: String(process.env.BUSINESS_COUNTRY_CODE || "").replace(/\D/g, "") || "",
+        moneda: process.env.BUSINESS_CURRENCY || "C$",
+        direccion: process.env.BUSINESS_DIRECCION || "",
+        horario: process.env.BUSINESS_HORARIO || "",
+        entrega: {
+          activa: process.env.BUSINESS_DELIVERY_ACTIVE !== "false",
+          costo: Number(process.env.BUSINESS_DELIVERY_COST) || 0,
+          minimo: Number(process.env.BUSINESS_DELIVERY_MIN) || 0,
+          zonas: process.env.BUSINESS_DELIVERY_ZONES || ""
+        },
+        pagos,
+        notas: process.env.BUSINESS_NOTAS || "Los pedidos se confirman por WhatsApp.",
+        colores,
+        horarios
+      },
+      productos: loadProductos(),
+      categorias: loadCategorias()
+    };
+  }
+
   const context = vm.createContext({ window: {} });
   ["assets/js/config.js", "assets/js/productos.js"].forEach((file) => {
-    const source = fs.readFileSync(path.join(ROOT, file), "utf8");
-    vm.runInContext(source, context, { filename: file });
+    try {
+      const source = fs.readFileSync(path.join(ROOT, file), "utf8");
+      vm.runInContext(source, context, { filename: file });
+    } catch (error) {
+      // ignore
+    }
   });
   return {
     negocio: context.window.NEGOCIO || {},
-    productos: Array.isArray(context.window.PRODUCTOS) ? context.window.PRODUCTOS : []
+    productos: Array.isArray(context.window.PRODUCTOS) ? context.window.PRODUCTOS : [],
+    categorias: Array.isArray(context.window.CATEGORIAS) ? context.window.CATEGORIAS : []
   };
+}
+
+function loadCategorias() {
+  if (process.env.CATEGORIAS_JSON) {
+    try {
+      const parsed = JSON.parse(process.env.CATEGORIAS_JSON);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (error) {
+      console.error("CATEGORIAS_JSON inválido:", error.message);
+    }
+  }
+  return [
+    { id: "todos", nombre: "Todo" },
+    { id: "almuerzos", nombre: "Almuerzos" },
+    { id: "fritos", nombre: "Fritos" },
+    { id: "bebidas", nombre: "Bebidas" },
+    { id: "postres", nombre: "Postres" }
+  ];
 }
 
 function json(res, status, data) {
@@ -51,6 +156,46 @@ function json(res, status, data) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   res.end(body);
+}
+
+function serveConfig(req, res, url) {
+  if (url.pathname !== "/assets/js/config.js") return false;
+  const negocio = business.negocio || {};
+  const categorias = Array.isArray(business.categorias) ? business.categorias : [];
+  const content = [
+    "window.NEGOCIO = " + JSON.stringify({
+      nombre: negocio.nombre || "Mi negocio",
+      eslogan: negocio.eslogan || "",
+      descripcion: negocio.descripcion || "",
+      whatsapp: negocio.whatsapp || "",
+      codigoPais: negocio.codigoPais || "",
+      moneda: negocio.moneda || "C$",
+      direccion: negocio.direccion || "",
+      horario: negocio.horario || "",
+      entrega: negocio.entrega || { activa: true, costo: 0, minimo: 0, zonas: "" },
+      pagos: Array.isArray(negocio.pagos) ? negocio.pagos : ["Efectivo"],
+      notas: negocio.notas || "",
+      colores: negocio.colores || {},
+      horarios: negocio.horarios || null
+    }) + ";",
+    "window.CATEGORIAS = " + JSON.stringify(categorias) + ";"
+  ].join("\n");
+  res.statusCode = 200;
+  res.setHeader("Content-Type", MIME[".js"]);
+  res.setHeader("Cache-Control", "no-store");
+  res.end(content);
+  return true;
+}
+
+function serveProductos(req, res, url) {
+  if (url.pathname !== "/assets/js/productos.js") return false;
+  const productos = Array.isArray(business.productos) ? business.productos : [];
+  const content = "window.PRODUCTOS = " + JSON.stringify(productos) + ";";
+  res.statusCode = 200;
+  res.setHeader("Content-Type", MIME[".js"]);
+  res.setHeader("Cache-Control", "no-store");
+  res.end(content);
+  return true;
 }
 
 function readJson(req, limit = 100 * 1024) {
@@ -225,13 +370,17 @@ async function api(req, res, url) {
   const method = req.method;
 
   if (route === "/api/negocio" && method === "GET") {
+    const demo = demoStatus();
     json(res, 200, {
       negocio: {
         nombre: business.negocio.nombre || "Mi negocio",
         eslogan: business.negocio.eslogan || "",
         moneda: business.negocio.moneda || "C$"
       },
-      demo: !process.env.PANEL_PASSWORD
+      demo: process.env.PANEL_PASSWORD ? false : true,
+      trial: demo.active,
+      trialDaysLeft: demo.daysLeft,
+      trialEndsAt: demo.endsAt
     });
     return true;
   }
@@ -333,6 +482,9 @@ async function api(req, res, url) {
 
 async function serveStatic(req, res, url) {
   if (req.method !== "GET" && req.method !== "HEAD") return false;
+
+  if (url.pathname === "/assets/js/config.js") return serveConfig(req, res, url);
+  if (url.pathname === "/assets/js/productos.js") return serveProductos(req, res, url);
 
   let relative = url.pathname;
   if (relative === "/") relative = "/index.html";

@@ -143,6 +143,30 @@
 
     document.title = name + " · Pedidos por WhatsApp";
 
+    var themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta && NEGOCIO.colores && NEGOCIO.colores.brand) themeMeta.setAttribute("content", NEGOCIO.colores.brand);
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+
+    var shareBtn = $("#shareMenu");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", function () {
+        var url = window.location.origin + window.location.pathname.replace(/index\.html.*$/, '').replace(/\/+$/, '/');
+        var qr = "https://api.qrserver.com/v1/create-qr-code/?size=256x256&format=png&data=" + encodeURIComponent(url);
+        var w = window.open("", "qr", "width=320,height=380");
+        if (!w) {
+          window.open(qr, "_blank", "noopener");
+          return;
+        }
+        w.document.write("<html><head><title>QR - " + esc(NEGOCIO.nombre || "Menú") + "</title><meta name=viewport content='width=device-width,initial-scale=1'></head><body style='font-family:sans-serif;text-align:center;padding:20px'><h3>" + esc(NEGOCIO.nombre || "Menú") + "</h3><img src='" + qr.replace(/'/g, "%27") + "' alt='QR'><p style='word-break:break-all;font-size:12px'>" + esc(url) + "</p></body></html>");
+        w.document.close();
+      });
+    }
+
     setText("brandMark", initials(name));
     setText("ticketBrand", initials(name));
     setText("bizName", name);

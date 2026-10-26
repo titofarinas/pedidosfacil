@@ -622,7 +622,6 @@ svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
 }
 
 .art-initials {
@@ -827,6 +826,11 @@ svg {
   font-weight: 600;
   color: var(--muted);
   text-decoration: underline;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font);
 }
 
 .footer-link:hover {
@@ -985,6 +989,7 @@ body.cart-open .cart-fab {
 }
 
 .ci-art {
+  position: relative;
   display: grid;
   place-items: center;
   width: 46px;
@@ -994,6 +999,8 @@ body.cart-open .cart-fab {
   color: #fff;
   font-size: 0.78rem;
   font-weight: 800;
+  overflow: hidden;
+  flex: 0 0 auto;
 }
 
 .ci-top {
